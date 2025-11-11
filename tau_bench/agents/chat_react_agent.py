@@ -23,6 +23,16 @@ class ChatReActAgent(Agent):
         provider: str,
         use_reasoning: bool = True,
         temperature: float = 0.0,
+        # LightLLM相关参数
+        api_base: str = None,
+        top_p: float = 0.95,
+        top_k: int = 20,
+        repetition_penalty: float = 1.05,
+        max_new_tokens: int = 32768,
+        do_sample: bool = True,
+        skip_special_tokens: bool = False,
+        add_special_tokens: bool = False,
+        stop_sequences: List[str] = None,
     ) -> None:
         instruction = REACT_INSTRUCTION if use_reasoning else ACT_INSTRUCTION
         self.prompt = (
@@ -33,16 +43,44 @@ class ChatReActAgent(Agent):
         self.temperature = temperature
         self.use_reasoning = use_reasoning
         self.tools_info = tools_info
+        
+        # LightLLM参数
+        self.api_base = api_base
+        self.top_p = top_p
+        self.top_k = top_k
+        self.repetition_penalty = repetition_penalty
+        self.max_new_tokens = max_new_tokens
+        self.do_sample = do_sample
+        self.skip_special_tokens = skip_special_tokens
+        self.add_special_tokens = add_special_tokens
+        self.stop_sequences = stop_sequences or ['<|im_end|>']
 
     def generate_next_step(
         self, messages: List[Dict[str, Any]]
     ) -> Tuple[Dict[str, Any], Action, float]:
-        res = completion(
-            model=self.model,
-            custom_llm_provider=self.provider,
-            messages=messages,
-            temperature=self.temperature,
-        )
+        # 准备completion参数
+        completion_kwargs = {
+            "model": self.model,
+            "custom_llm_provider": self.provider,
+            "messages": messages,
+            "temperature": self.temperature,
+        }
+        
+        # 如果是lightllm provider，添加相关参数
+        if self.provider == "lightllm":
+            completion_kwargs.update({
+                "api_base": self.api_base,
+                "top_p": self.top_p,
+                "top_k": self.top_k,
+                "repetition_penalty": self.repetition_penalty,
+                "max_new_tokens": self.max_new_tokens,
+                "do_sample": self.do_sample,
+                "skip_special_tokens": self.skip_special_tokens,
+                "add_special_tokens": self.add_special_tokens,
+                "stop_sequences": self.stop_sequences,
+            })
+        
+        res = completion(**completion_kwargs)
         message = res.choices[0].message
         action_str = message.content.split("Action:")[-1].strip()
         try:

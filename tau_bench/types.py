@@ -88,3 +88,17 @@ class RunConfig(BaseModel):
     shuffle: int = 0
     user_strategy: str = "llm"
     few_shot_displays_path: Optional[str] = None
+    
+    # API相关参数
+    api_base: Optional[str] = None
+    
+    # LightLLM相关参数
+    top_p: float = 0.95
+    top_k: int = 20
+    repetition_penalty: float = 1.05
+    max_new_tokens: int = 32768
+    do_sample: bool = True
+    skip_special_tokens: bool = False
+    add_special_tokens: bool = False
+    stop_sequences: List[str] = ["<|im_end|>"]
+    enable_thinking: bool = False
