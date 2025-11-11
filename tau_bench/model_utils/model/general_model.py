@@ -179,6 +179,17 @@ def model_factory(
             api_key="sk-no-api-key-required" if api_key is None else api_key,
             temperature=temperature,
         )
+    elif platform == Platform.LIGHTLLM:
+        if base_url is None:
+            raise ValueError("base_url must be provided for custom models")
+        from tau_bench.model_utils.model.lightllm import LightLLMModel
+
+        return LightLLMModel(
+            model=model_id,
+            base_url=base_url,
+            api_key=api_key,
+            temperature=temperature,
+        )
     else:
         if base_url is None:
             raise ValueError("base_url must be provided for custom models")

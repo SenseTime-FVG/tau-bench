@@ -17,13 +17,35 @@ class ToolCallingAgent(Agent):
         model: str,
         provider: str,
         temperature: float = 0.0,
+        # LightLLM相关参数
+        api_base: str = None,
+        top_p: float = 0.95,
+        top_k: int = 20,
+        repetition_penalty: float = 1.05,
+        max_new_tokens: int = 32768,
+        do_sample: bool = True,
+        skip_special_tokens: bool = False,
+        add_special_tokens: bool = False,
+        stop_sequences: List[str] = None,
+        enable_thinking: bool = False
     ):
         self.tools_info = tools_info
         self.wiki = wiki
         self.model = model
         self.provider = provider
         self.temperature = temperature
-
+        
+        # LightLLM参数
+        self.api_base = api_base
+        self.top_p = top_p
+        self.top_k = top_k
+        self.repetition_penalty = repetition_penalty
+        self.max_new_tokens = max_new_tokens
+        self.do_sample = do_sample
+        self.skip_special_tokens = skip_special_tokens
+        self.add_special_tokens = add_special_tokens
+        self.stop_sequences = stop_sequences
+        self.enable_thinking = enable_thinking
     def solve(
         self, env: Env, task_index: Optional[int] = None, max_num_steps: int = 30
     ) -> SolveResult:
@@ -37,15 +59,34 @@ class ToolCallingAgent(Agent):
             {"role": "user", "content": obs},
         ]
         for _ in range(max_num_steps):
-            res = completion(
-                messages=messages,
-                model=self.model,
-                custom_llm_provider=self.provider,
-                tools=self.tools_info,
-                temperature=self.temperature,
-            )
+            # 准备completion参数
+            completion_kwargs = {
+                "messages": messages,
+                "model": self.model,
+                "custom_llm_provider": self.provider,
+                "tools": self.tools_info,
+                "temperature": self.temperature,
+            }
+            
+            # 如果是lightllm provider，添加相关参数
+            if self.provider == "lightllm":
+                completion_kwargs.update({
+                    "api_base": self.api_base,
+                    "top_p": self.top_p,
+                    "top_k": self.top_k,
+                    "repetition_penalty": self.repetition_penalty,
+                    "max_new_tokens": self.max_new_tokens,
+                    "do_sample": self.do_sample,
+                    "skip_special_tokens": self.skip_special_tokens,
+                    "add_special_tokens": self.add_special_tokens,
+                    "stop_sequences": self.stop_sequences,
+                    "enable_thinking": self.enable_thinking
+                })
+            
+            res = completion(**completion_kwargs)
             next_message = res.choices[0].message.model_dump()
-            total_cost += res._hidden_params["response_cost"] or 0
+
+            total_cost += res._hidden_params["response_cost"] if res._hidden_params["response_cost"] is not None else 0
             action = message_to_action(next_message)
             env_response = env.step(action)
             reward = env_response.reward

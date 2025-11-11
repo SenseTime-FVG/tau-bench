@@ -16,6 +16,8 @@ from tau_bench.types import EnvRunResult, RunConfig
 from litellm import provider_list
 from tau_bench.envs.user import UserStrategy
 
+# import litellm
+# litellm._turn_on_debug()
 
 def run(config: RunConfig) -> List[EnvRunResult]:
     assert config.env in ["retail", "airline"], "Only retail and airline envs are supported"
@@ -134,6 +136,18 @@ def agent_factory(
             model=config.model,
             provider=config.model_provider,
             temperature=config.temperature,
+            
+            # LightLLM参数
+            api_base=config.api_base,
+            top_p=config.top_p,
+            top_k=config.top_k,
+            repetition_penalty=config.repetition_penalty,
+            max_new_tokens=config.max_new_tokens,
+            do_sample=config.do_sample,
+            skip_special_tokens=config.skip_special_tokens,
+            add_special_tokens=config.add_special_tokens,
+            stop_sequences=config.stop_sequences,
+            enable_thinking=config.enable_thinking
         )
     elif config.agent_strategy == "act":
         # `act` from https://arxiv.org/abs/2210.03629
@@ -146,6 +160,16 @@ def agent_factory(
             provider=config.model_provider,
             use_reasoning=False,
             temperature=config.temperature,
+            # LightLLM参数
+            api_base=config.api_base,
+            top_p=config.top_p,
+            top_k=config.top_k,
+            repetition_penalty=config.repetition_penalty,
+            max_new_tokens=config.max_new_tokens,
+            do_sample=config.do_sample,
+            skip_special_tokens=config.skip_special_tokens,
+            add_special_tokens=config.add_special_tokens,
+            stop_sequences=config.stop_sequences,
         )
     elif config.agent_strategy == "react":
         # `react` from https://arxiv.org/abs/2210.03629
@@ -158,6 +182,16 @@ def agent_factory(
             provider=config.model_provider,
             use_reasoning=True,
             temperature=config.temperature,
+            # LightLLM参数
+            api_base=config.api_base,
+            top_p=config.top_p,
+            top_k=config.top_k,
+            repetition_penalty=config.repetition_penalty,
+            max_new_tokens=config.max_new_tokens,
+            do_sample=config.do_sample,
+            skip_special_tokens=config.skip_special_tokens,
+            add_special_tokens=config.add_special_tokens,
+            stop_sequences=config.stop_sequences,
         )
     elif config.agent_strategy == "few-shot":
         from tau_bench.agents.few_shot_agent import FewShotToolCallingAgent
@@ -172,6 +206,16 @@ def agent_factory(
             provider=config.model_provider,
             few_shot_displays=few_shot_displays,
             temperature=config.temperature,
+            # LightLLM参数
+            api_base=config.api_base,
+            top_p=config.top_p,
+            top_k=config.top_k,
+            repetition_penalty=config.repetition_penalty,
+            max_new_tokens=config.max_new_tokens,
+            do_sample=config.do_sample,
+            skip_special_tokens=config.skip_special_tokens,
+            add_special_tokens=config.add_special_tokens,
+            stop_sequences=config.stop_sequences,
         )
     else:
         raise ValueError(f"Unknown agent strategy: {config.agent_strategy}")
